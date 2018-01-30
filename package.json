@@ -1,0 +1,16 @@
+{
+  "name": "brotli-cli",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/dzek69/brotli-cli.git",
+  "author": "Jacek Nowacki <git-public@dzek.eu>",
+  "license": "MIT",
+  "bin": "index.js",
+  "dependencies": {
+    "brotli": "^1.3.2",
+    "fs-extra": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=6.4.0"
+  }
+}
