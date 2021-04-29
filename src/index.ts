@@ -185,6 +185,7 @@ yargs(process.argv.slice(2))
                             process.stdout.write(compressed);
                             return;
                         }
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         if (compressed == null) {
                             throw new TypeError("Empty response returned from brotli");
                         }
