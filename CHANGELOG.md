@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [UNRELEASED]
 (nothing yet)
 
+## [1.0.1] - 2021-04-29
+### Fixed
+- not very meaningful no/bad command errors
+
 ## [1.0.0] - 2021-04-29
 ### Added
 - glob pattern matching

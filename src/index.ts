@@ -246,7 +246,16 @@ yargs(process.argv.slice(2))
         }
     })
     .command("*", false, noop, () => {
-        throw new Error("Unknown command " + process.argv[2]);
+        yargs.showHelp();
+
+        console.error();
+        if (!process.argv[2]) {
+            console.error("No command given, did you miss `compress` keyword?");
+            return;
+        }
+        console.error("Unknown command, did you miss `compress` keyword?");
+        // eslint-disable-next-line no-process-exit
+        process.exit(1);
     })
     // @ts-expect-error Missing TS type
     .strictOptions(true)
