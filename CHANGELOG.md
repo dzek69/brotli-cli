@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [UNRELEASED]
 (nothing yet)
 
+## [1.0.2] - 2021-07-09
+### Changed
+- README
+### Dev
+- tslib upgrade, some dev deps upgrades
+
 ## [1.0.1] - 2021-04-29
 ### Fixed
 - not very meaningful no/bad command errors

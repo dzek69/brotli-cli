@@ -1,4 +1,5 @@
 {
+    "root": true,
     "extends": [
         "@dzek69/eslint-config-base",
         "@dzek69/eslint-config-typescript"
@@ -14,7 +15,8 @@
     "overrides": [
         {
             "files": [
-                "src/*.spec.*", "src/**/*.spec.*"
+                "src/*.spec.*",
+                "src/**/*.spec.*"
             ],
             "env": {
                 "jest": true

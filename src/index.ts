@@ -258,7 +258,6 @@ yargs(process.argv.slice(2))
         // eslint-disable-next-line no-process-exit
         process.exit(1);
     })
-    // @ts-expect-error Missing TS type
     .strictOptions(true)
     .argv; // yargs needs that unused expression
 
