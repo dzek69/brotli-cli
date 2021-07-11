@@ -98,6 +98,12 @@ yargs(process.argv.slice(2))
         default: true,
         description: "Always skip .br extension when matching files",
     })
+    .option("skip-empty-files", {
+        alias: "skip-empty",
+        type: "boolean",
+        default: true,
+        description: "Always skip empty files when matching",
+    })
     .option("verbose", {
         alias: "v",
         type: "boolean",
@@ -187,6 +193,9 @@ yargs(process.argv.slice(2))
                         }
                         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         if (compressed == null) {
+                            if (argv["skip-empty"]) {
+                                return;
+                            }
                             throw new TypeError("Empty response returned from brotli");
                         }
                         return writeFile(argv.br ? file + ".br" : file, compressed);
