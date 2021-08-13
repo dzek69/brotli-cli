@@ -30,8 +30,7 @@ interface CompressionError {
 }
 
 // yargs needs that unused expression
-// eslint-disable-next-line max-len
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-magic-numbers
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions,@typescript-eslint/no-magic-numbers
 yargs(process.argv.slice(2))
     .scriptName("brotli-cli")
     .usage("This tool allows you to compress given files with Brotli compression.")
@@ -174,22 +173,33 @@ yargs(process.argv.slice(2))
 
             await Promise.all(files.map(file => {
                 let p = readFile(file)
-                    .then(buffer => compress(buffer, {
-                        // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                        mode: modes.indexOf(argv.mode) as 0 | 1 | 2,
-                        quality: argv.quality as Quality,
-                        lgwin: argv.lgwin,
-                    }))
-                    .then((compressed) => {
+                    .then(buffer => {
+                        if (!buffer.length) {
+                            return {
+                                sourceLength: 0,
+                                compressed: null,
+                            };
+                        }
+
+                        return {
+                            sourceLength: buffer.length,
+                            compressed: compress(buffer, {
+                                // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+                                mode: modes.indexOf(argv.mode) as 0 | 1 | 2,
+                                quality: argv.quality as Quality,
+                                lgwin: argv.lgwin,
+                            }),
+                        };
+                    })
+                    .then(async ({ sourceLength, compressed }) => {
                         if (printToStdOut) {
-                            process.stdout.write(compressed);
+                            process.stdout.write(compressed ?? "");
                             return;
                         }
-                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                        if (compressed == null) {
+                        if (sourceLength && compressed == null) {
                             throw new TypeError("Empty response returned from brotli");
                         }
-                        return writeFile(argv.br ? file + ".br" : file, compressed);
+                        return writeFile(argv.br ? file + ".br" : file, compressed ?? "");
                     });
 
                 if (!argv.bail) {

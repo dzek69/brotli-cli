@@ -1,6 +1,6 @@
 {
   "name": "brotli-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": "git@github.com:dzek69/brotli-cli.git",
   "author": "Jacek Nowacki",
   "license": "MIT",
