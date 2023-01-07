@@ -2,7 +2,9 @@
     "root": true,
     "extends": [
         "@dzek69/eslint-config-base",
-        "@dzek69/eslint-config-typescript"
+        "@dzek69/eslint-config-typescript",
+        "@dzek69/eslint-config-import",
+        "@dzek69/eslint-config-import-typescript"
     ],
     "env": {
         "node": true

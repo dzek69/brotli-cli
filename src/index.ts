@@ -2,6 +2,7 @@
 /* eslint-disable max-lines */
 import fs from "fs";
 import util from "util";
+
 import yargs from "yargs";
 import fg from "fast-glob";
 import { compress } from "brotli";
@@ -29,8 +30,8 @@ interface CompressionError {
     error: unknown;
 }
 
-// yargs needs that unused expression
-// eslint-disable-next-line @typescript-eslint/no-unused-expressions,@typescript-eslint/no-magic-numbers
+// eslint-disable-next-line max-len
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions,@typescript-eslint/no-magic-numbers,@typescript-eslint/no-floating-promises
 yargs(process.argv.slice(2))
     .scriptName("brotli-cli")
     .usage("This tool allows you to compress given files with Brotli compression.")
@@ -103,7 +104,7 @@ yargs(process.argv.slice(2))
         default: false,
         description: "Run with verbose logging",
     })
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises,max-statements,max-lines-per-function
+    // eslint-disable-next-line max-statements,max-lines-per-function
     .command("compress", "Compresses specified files", noop, async (argv) => {
         try {
             const list = argv._.slice(1).map(String);
@@ -243,7 +244,7 @@ yargs(process.argv.slice(2))
                     );
                 }
                 // @ts-expect-error better-custom-error needs improvement
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
                 (error.details.list as CompressionError[]).forEach((e) => {
                     console.error("File:", e.file);
                     console.error(e.error);
@@ -271,4 +272,3 @@ yargs(process.argv.slice(2))
     .strictOptions(true)
     .argv; // yargs needs that unused expression
 
-export {};

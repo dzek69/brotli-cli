@@ -2,7 +2,7 @@
 /build-scripts/
 /test/
 
-/babel.config.cjs
+/babel.config.js
 /jest.config.cjs
 /yarn.lock
 /*.tgz
@@ -16,3 +16,5 @@
 *.map
 /.eslintrc.json
 /.eslintrc.json
+
+/pagesconfig.json

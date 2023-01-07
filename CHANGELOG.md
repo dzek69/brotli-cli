@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [UNRELEASED]
 (nothing yet)
 
+## [1.0.4] - 2023-01-07
+### Dev
+- dependencies update
+
 ## [1.0.3] - 2021-08-13
 ### Fixed
 - crash when compressing empty files
