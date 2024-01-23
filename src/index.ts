@@ -1,36 +1,17 @@
 #!/usr/bin/env node
 /* eslint-disable max-lines */
-import fs from "fs";
-import util from "util";
-
 import yargs from "yargs";
 import fg from "fast-glob";
-import { compress } from "brotli";
+
+import type { CompressionErrorInfo, Mode, Quality, WindowSize } from "./types";
 
 import { CompressionProcessError, NoFilesError } from "./errors.js";
-
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
+import { modes, quality, windowSize } from "./const.js";
+import { compress } from "./compress";
+import { writeFile } from "./utils";
 
 const noop = () => undefined;
 
-type Mode = "generic" | "text" | "font";
-const modes: readonly Mode[] = ["generic", "text", "font"];
-
-type Quality = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const quality: readonly Quality[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-
-type WindowSize = 0 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24;
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const windowSize: readonly WindowSize[] = [0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
-
-interface CompressionError {
-    file: string;
-    error: unknown;
-}
-
-// eslint-disable-next-line max-len
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions,@typescript-eslint/no-magic-numbers,@typescript-eslint/no-floating-promises
 yargs(process.argv.slice(2))
     .scriptName("brotli-cli")
@@ -125,7 +106,7 @@ yargs(process.argv.slice(2))
                     console.warn("  -", pattern);
                 });
             }
-            let files;
+            let files: string[];
             if (argv.glob) {
                 files = await fg(list, { dot: true });
 
@@ -170,29 +151,17 @@ yargs(process.argv.slice(2))
                 });
             }
 
-            const errors: CompressionError[] = [];
+            const errors: CompressionErrorInfo[] = [];
 
             await Promise.all(files.map(file => {
-                let p = readFile(file)
-                    .then(buffer => {
-                        if (!buffer.length) {
-                            return {
-                                sourceLength: 0,
-                                compressed: null,
-                            };
-                        }
-
-                        return {
-                            sourceLength: buffer.length,
-                            compressed: compress(buffer, {
-                                // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                                mode: modes.indexOf(argv.mode) as 0 | 1 | 2,
-                                quality: argv.quality as Quality,
-                                lgwin: argv.lgwin,
-                            }),
-                        };
-                    })
-                    .then(async ({ sourceLength, compressed }) => {
+                let p = compress({
+                    filePath: file,
+                    mode: argv.mode as Mode,
+                    quality: argv.quality as Quality,
+                    windowSize: argv.lgwin as WindowSize,
+                    engine: "library",
+                })
+                    .then(({ sourceLength, compressed }) => {
                         if (printToStdOut) {
                             process.stdout.write(compressed ?? "");
                             return;
@@ -243,9 +212,8 @@ yargs(process.argv.slice(2))
                         "Some errors happened during compression process. All other files finished successfully.",
                     );
                 }
-                // @ts-expect-error better-custom-error needs improvement
 
-                (error.details.list as CompressionError[]).forEach((e) => {
+                (error.details?.list)?.forEach((e) => {
                     console.error("File:", e.file);
                     console.error(e.error);
                 });

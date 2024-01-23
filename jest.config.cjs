@@ -1,16 +1,23 @@
 module.exports = {
-    // testMatch: [],
-    collectCoverageFrom: [
-        'src/**/*.{mjs,js,jsx,ts,tsx}',
-        '!**/*.d.ts'
-    ],
-    setupFiles: [
-        '<rootDir>/test/bootstrap.cjs'
-    ],
-    testURL: 'http://localhost:8080',
-    moduleNameMapper: {
-        '^(.*)\.js$': '$1',
-    },
+  "collectCoverageFrom": [
+    "src/**/*.{mjs,js,jsx,ts,tsx}",
+    "!**/*.d.ts"
+  ],
+  "setupFiles": [
+    "<rootDir>/test/bootstrap.cjs"
+  ],
+  "moduleNameMapper": {
+    "^(.*).js$": "$1"
+  },
+  "testEnvironmentOptions": {
+    "url": "http://localhost:8080"
+  },
+  "transform": {
+    "\\.[jt]sx?$": [
+      "babel-jest",
+      {
+        "configFile": "./test/babel.config.cjs"
+      }
+    ]
+  }
 };
-
-
