@@ -3,8 +3,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASED]
-(nothing yet)
+## [2.0.0] - 2024-01-25
+### Breaking
+- compression is now done using Node's native zlib module, this requires Node v12 at least
+### Fixed
+- `--glob-skip-br-extension` option not working
+- some compression crashes on newer Node versions
+### Changed
+- default window size (compression option) set to 24 (was 0)
+### Dev
+- huge deps upgrade
+- huge cleanup
 
 ## [1.0.4] - 2023-01-07
 ### Dev

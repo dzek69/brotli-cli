@@ -1,36 +1,18 @@
 #!/usr/bin/env node
 /* eslint-disable max-lines */
-import fs from "fs";
-import util from "util";
-
 import yargs from "yargs";
-import fg from "fast-glob";
-import { compress } from "brotli";
+import fastGlob from "fast-glob";
+
+import type { Mode, Quality, WindowSize } from "./types";
+import type { CompressQueueOptions } from "./compressQueue";
 
 import { CompressionProcessError, NoFilesError } from "./errors.js";
-
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
+import { ALL_CPUS } from "./config.js";
+import { modes, quality, windowSize } from "./const.js";
+import { compressQueue } from "./compressQueue.js";
 
 const noop = () => undefined;
 
-type Mode = "generic" | "text" | "font";
-const modes: readonly Mode[] = ["generic", "text", "font"];
-
-type Quality = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const quality: readonly Quality[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-
-type WindowSize = 0 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24;
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const windowSize: readonly WindowSize[] = [0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
-
-interface CompressionError {
-    file: string;
-    error: unknown;
-}
-
-// eslint-disable-next-line max-len
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions,@typescript-eslint/no-magic-numbers,@typescript-eslint/no-floating-promises
 yargs(process.argv.slice(2))
     .scriptName("brotli-cli")
@@ -68,10 +50,38 @@ yargs(process.argv.slice(2))
         default: 11,
         description: "Brotli compression quality",
     })
+    .option("threads", {
+        alias: "t",
+        description: "Use this many concurrent jobs [number of threads or `true` for threads=CPUs amount]",
+        default: true,
+        coerce: (value: unknown) => {
+            if (value === true) {
+                return ALL_CPUS;
+            }
+            if (value === false) {
+                return 1;
+            }
+            const isInt = Number.isInteger(Number(value));
+            const num = Number(value);
+            if (isInt) {
+                if (num === 0) {
+                    // zero = all cpus
+                    return ALL_CPUS;
+                }
+                if (num < 0) {
+                    throw new TypeError("Threads amount must be positive");
+                }
+                return Number(value);
+            }
+
+            // not boolean and not valid integer
+            return ALL_CPUS;
+        },
+    })
     .option("lgwin", {
         alias: "l",
         choices: windowSize,
-        default: 0,
+        default: 24,
         description: "Brotli compression window size",
     })
     .option("bail", {
@@ -125,11 +135,11 @@ yargs(process.argv.slice(2))
                     console.warn("  -", pattern);
                 });
             }
-            let files;
+            let files: string[];
             if (argv.glob) {
-                files = await fg(list, { dot: true });
+                files = await fastGlob(list, { dot: true });
 
-                if (argv.noBr) {
+                if (argv.skipBr) {
                     const filteredOut: typeof files = [];
                     files = files.filter(file => {
                         const isBr = file.endsWith(".br");
@@ -160,7 +170,7 @@ yargs(process.argv.slice(2))
 
             if (argv.v) {
                 if (argv.glob) {
-                    console.warn("Matched those files");
+                    console.warn(`Matched those files (${files.length})`);
                 }
                 else {
                     console.warn("Glob disabled, will try to compress these");
@@ -168,69 +178,27 @@ yargs(process.argv.slice(2))
                 files.forEach(file => {
                     console.warn("  -", file);
                 });
+
+                console.warn("");
+                console.warn(`Starting compression with ${argv.threads} threads`);
+            }
+            else {
+                console.warn(`Starting compression of ${files.length} files with ${argv.threads} threads if possible`);
             }
 
-            const errors: CompressionError[] = [];
+            const options: CompressQueueOptions = {
+                mode: argv.mode as Mode,
+                quality: argv.quality as Quality,
+                windowSize: argv.lgwin as WindowSize,
+                concurrency: argv.threads,
+                bail: argv.bail,
+                br: Boolean(argv.br),
+                printToStdOut: printToStdOut,
+                files: files,
+            };
 
-            await Promise.all(files.map(file => {
-                let p = readFile(file)
-                    .then(buffer => {
-                        if (!buffer.length) {
-                            return {
-                                sourceLength: 0,
-                                compressed: null,
-                            };
-                        }
-
-                        return {
-                            sourceLength: buffer.length,
-                            compressed: compress(buffer, {
-                                // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-                                mode: modes.indexOf(argv.mode) as 0 | 1 | 2,
-                                quality: argv.quality as Quality,
-                                lgwin: argv.lgwin,
-                            }),
-                        };
-                    })
-                    .then(async ({ sourceLength, compressed }) => {
-                        if (printToStdOut) {
-                            process.stdout.write(compressed ?? "");
-                            return;
-                        }
-                        if (sourceLength && compressed == null) {
-                            throw new TypeError("Empty response returned from brotli");
-                        }
-                        return writeFile(argv.br ? file + ".br" : file, compressed ?? "");
-                    });
-
-                if (!argv.bail) {
-                    p = p.catch((error: unknown) => {
-                        errors.push({
-                            file, error,
-                        });
-                    });
-                }
-                else {
-                    p = p.catch((error: unknown) => {
-                        throw new CompressionProcessError(`Error happened during compression process`, {
-                            list: [{
-                                file,
-                                error,
-                            }],
-                        });
-                    });
-                }
-                return p;
-            }));
-
-            if (errors.length) {
-                throw new CompressionProcessError(`${errors.length} errors happened during compression process`, {
-                    list: errors,
-                });
-            }
-            if (!printToStdOut) {
-                console.warn("OK");
-            }
+            await compressQueue(options);
+            console.warn("OK");
         }
         catch (error: unknown) {
             // manual error handling will also prevent printing help before the error
@@ -239,13 +207,14 @@ yargs(process.argv.slice(2))
                     console.error("Error happened during compression process, the process is stopped.");
                 }
                 else {
+                    const errorsCount = error.details?.list.length;
                     console.error(
-                        "Some errors happened during compression process. All other files finished successfully.",
+                        `Some errors (${String(errorsCount)}) happened during compression process.`
+                        + ` All other files finished successfully.`,
                     );
                 }
-                // @ts-expect-error better-custom-error needs improvement
 
-                (error.details.list as CompressionError[]).forEach((e) => {
+                (error.details?.list)?.forEach((e) => {
                     console.error("File:", e.file);
                     console.error(e.error);
                 });

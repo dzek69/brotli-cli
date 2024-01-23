@@ -2,7 +2,6 @@
 /build-scripts/
 /test/
 
-/babel.config.js
 /jest.config.cjs
 /yarn.lock
 /*.tgz
