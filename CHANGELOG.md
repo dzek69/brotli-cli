@@ -5,9 +5,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [UNRELEASED]
 ### Added
+- support for compressing with native zlib module (new default if available)
 - WIP support for concurrent compression
 ### Fixed
 - `--glob-skip-br-extension` option not working
+### Changed
+- default window size (compression option) set to 24 (was 0)
 ### Dev
 - huge deps upgrade
 - huge cleanup

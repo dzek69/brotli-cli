@@ -1,9 +1,7 @@
-import { compress as libCompress } from "brotli";
-
-import type { Mode, ModeNumeric, Quality, WindowSize } from "./types";
+import type { Mode, Quality, WindowSize } from "./types";
 
 import { readFile, writeFile } from "./utils.js";
-import { modes } from "./const.js";
+import { anyCompress } from "./anyCompress.js";
 
 type Options = {
     filePath: string;
@@ -21,10 +19,6 @@ type CompressResult = {
 };
 
 const compress = async (options: Options): Promise<CompressResult> => {
-    if (options.engine === "native") {
-        throw new Error("Not implemented");
-    }
-
     const buffer = await readFile(options.filePath);
     if (buffer.length === 0) {
         return {
@@ -35,10 +29,10 @@ const compress = async (options: Options): Promise<CompressResult> => {
 
     const result: CompressResult = {
         sourceLength: buffer.length,
-        compressed: libCompress(buffer, {
-            mode: modes.indexOf(options.mode) as ModeNumeric,
+        compressed: await anyCompress(buffer, options.engine, {
+            mode: options.mode,
             quality: options.quality,
-            lgwin: options.windowSize,
+            windowSize: options.windowSize,
         }),
     };
 

@@ -81,8 +81,14 @@ yargs(process.argv.slice(2))
     .option("lgwin", {
         alias: "l",
         choices: windowSize,
-        default: 0,
+        default: 24,
         description: "Brotli compression window size",
+    })
+    .option("engine", {
+        alias: "e",
+        choices: ["native", "library"],
+        default: "native",
+        description: "Brotli compression engine (native = node.js' zlib, library = `brotli` npm library)",
     })
     .option("bail", {
         alias: "b",
@@ -188,7 +194,7 @@ yargs(process.argv.slice(2))
                 quality: argv.quality as Quality,
                 windowSize: argv.lgwin as WindowSize,
                 concurrency: argv.threads,
-                engine: "library",
+                engine: argv.engine as "library" | "native",
                 bail: argv.bail,
                 br: Boolean(argv.br),
                 printToStdOut: printToStdOut,
