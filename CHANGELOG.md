@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [UNRELEASED]
+### Added
+- WIP support for concurrent compression
+### Fixed
+- `--glob-skip-br-extension` option not working
 ### Dev
 - huge deps upgrade
 - huge cleanup

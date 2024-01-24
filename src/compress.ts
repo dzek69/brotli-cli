@@ -3,7 +3,7 @@ import { compress as libCompress } from "brotli";
 import type { Mode, ModeNumeric, Quality, WindowSize } from "./types";
 
 import { readFile } from "./utils.js";
-import { modes } from "./const";
+import { modes } from "./const.js";
 
 type Options = {
     filePath: string;

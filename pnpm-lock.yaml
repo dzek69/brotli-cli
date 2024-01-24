@@ -17,6 +17,9 @@ dependencies:
   fast-glob:
     specifier: ^3.2.12
     version: 3.2.12
+  queue-system:
+    specifier: ^4.1.1
+    version: 4.1.1
   yargs:
     specifier: ^17.7.2
     version: 17.7.2
@@ -1444,6 +1447,10 @@ packages:
 
   /@ezez/errors@6.0.2:
     resolution: {integrity: sha512-UjPxe+O62l9sg2LTGqw0bgBtshk0wUv1PjbKpvrcUSRyFAhVZBBBDqx6kdND2+KmhGCkJSS12I4rdHEqxZSv5Q==}
+    dev: false
+
+  /@ezez/utils@1.9.0:
+    resolution: {integrity: sha512-pIuKqUxf+U13Xc49x9k9WbIpGSVqzgmvTrNHEMOKS1XUpwT2F/dDxUjadJmwRLprXRmkDfTtOBU03v9b0+WqAw==}
     dev: false
 
   /@humanwhocodes/config-array@0.11.14:
@@ -2927,6 +2934,10 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
     dev: true
+
+  /eventemitter3@4.0.7:
+    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
+    dev: false
 
   /execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -4464,6 +4475,13 @@ packages:
 
   /queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
+
+  /queue-system@4.1.1:
+    resolution: {integrity: sha512-wO///ZWb/x8tVWJnm7CZ4FgX2TIWQYrKwzPVwJwFxncwg3qGTCJoyc3rQy+0XgodWFvcAgeFAY70E9h5NLHlMg==}
+    dependencies:
+      '@ezez/utils': 1.9.0
+      eventemitter3: 4.0.7
+    dev: false
 
   /react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}

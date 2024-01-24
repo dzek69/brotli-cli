@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /* eslint-disable max-lines */
 import yargs from "yargs";
-import fg from "fast-glob";
+import fastGlob from "fast-glob";
 
-import type { CompressionErrorInfo, Mode, Quality, WindowSize } from "./types";
+import type { Mode, Quality, WindowSize } from "./types";
+import type { CompressQueueOptions } from "./compressQueue";
 
 import { CompressionProcessError, NoFilesError } from "./errors.js";
+import { ALL_CPUS, WORKERS_SUPPORTED } from "./config.js";
 import { modes, quality, windowSize } from "./const.js";
-import { compress } from "./compress";
-import { writeFile } from "./utils";
+import { compressQueue } from "./compressQueue.js";
 
 const noop = () => undefined;
 
@@ -48,6 +49,34 @@ yargs(process.argv.slice(2))
         choices: quality,
         default: 11,
         description: "Brotli compression quality",
+    })
+    .option("threads", {
+        alias: "t",
+        description: "Use this many threads for jobs [number of threads or `true` for threads=CPUs amount]",
+        default: WORKERS_SUPPORTED,
+        coerce: (value: unknown) => {
+            if (value === true) {
+                return ALL_CPUS;
+            }
+            if (value === false) {
+                return 1;
+            }
+            const isInt = Number.isInteger(Number(value));
+            const num = Number(value);
+            if (isInt) {
+                if (num === 0) {
+                    // zero = all cpus
+                    return ALL_CPUS;
+                }
+                if (num < 0) {
+                    throw new TypeError("Threads amount must be positive");
+                }
+                return Number(value);
+            }
+
+            // not boolean and not valid integer
+            return ALL_CPUS;
+        },
     })
     .option("lgwin", {
         alias: "l",
@@ -108,9 +137,9 @@ yargs(process.argv.slice(2))
             }
             let files: string[];
             if (argv.glob) {
-                files = await fg(list, { dot: true });
+                files = await fastGlob(list, { dot: true });
 
-                if (argv.noBr) {
+                if (argv.skipBr) {
                     const filteredOut: typeof files = [];
                     files = files.filter(file => {
                         const isBr = file.endsWith(".br");
@@ -141,7 +170,7 @@ yargs(process.argv.slice(2))
 
             if (argv.v) {
                 if (argv.glob) {
-                    console.warn("Matched those files");
+                    console.warn(`Matched those files (${files.length})`);
                 }
                 else {
                     console.warn("Glob disabled, will try to compress these");
@@ -149,57 +178,25 @@ yargs(process.argv.slice(2))
                 files.forEach(file => {
                     console.warn("  -", file);
                 });
+
+                console.warn("");
+                console.warn(`Starting compression with ${argv.threads} threads`);
             }
 
-            const errors: CompressionErrorInfo[] = [];
+            const options: CompressQueueOptions = {
+                mode: argv.mode as Mode,
+                quality: argv.quality as Quality,
+                windowSize: argv.lgwin as WindowSize,
+                concurrency: argv.threads,
+                engine: "library",
+                bail: argv.bail,
+                br: Boolean(argv.br),
+                printToStdOut: printToStdOut,
+                files: files,
+            };
 
-            await Promise.all(files.map(file => {
-                let p = compress({
-                    filePath: file,
-                    mode: argv.mode as Mode,
-                    quality: argv.quality as Quality,
-                    windowSize: argv.lgwin as WindowSize,
-                    engine: "library",
-                })
-                    .then(({ sourceLength, compressed }) => {
-                        if (printToStdOut) {
-                            process.stdout.write(compressed ?? "");
-                            return;
-                        }
-                        if (sourceLength && compressed == null) {
-                            throw new TypeError("Empty response returned from brotli");
-                        }
-                        return writeFile(argv.br ? file + ".br" : file, compressed ?? "");
-                    });
-
-                if (!argv.bail) {
-                    p = p.catch((error: unknown) => {
-                        errors.push({
-                            file, error,
-                        });
-                    });
-                }
-                else {
-                    p = p.catch((error: unknown) => {
-                        throw new CompressionProcessError(`Error happened during compression process`, {
-                            list: [{
-                                file,
-                                error,
-                            }],
-                        });
-                    });
-                }
-                return p;
-            }));
-
-            if (errors.length) {
-                throw new CompressionProcessError(`${errors.length} errors happened during compression process`, {
-                    list: errors,
-                });
-            }
-            if (!printToStdOut) {
-                console.warn("OK");
-            }
+            await compressQueue(options);
+            console.warn("OK");
         }
         catch (error: unknown) {
             // manual error handling will also prevent printing help before the error
@@ -208,15 +205,19 @@ yargs(process.argv.slice(2))
                     console.error("Error happened during compression process, the process is stopped.");
                 }
                 else {
+                    const errorsCount = error.details?.list.length;
                     console.error(
-                        "Some errors happened during compression process. All other files finished successfully.",
+                        `Some errors (${String(errorsCount)}) happened during compression process.`
+                        + ` All other files finished successfully.`,
                     );
                 }
 
-                (error.details?.list)?.forEach((e) => {
-                    console.error("File:", e.file);
-                    console.error(e.error);
-                });
+                if (argv.v) {
+                    (error.details?.list)?.forEach((e) => {
+                        console.error("File:", e.file);
+                        console.error(e.error);
+                    });
+                }
             }
             else {
                 console.error(error);
