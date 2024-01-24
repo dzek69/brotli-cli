@@ -4,7 +4,6 @@ import type { EventsTypes } from "queue-system/esm/const";
 import type { CompressionErrorInfo, Mode, Quality, WindowSize } from "./types";
 
 import { compress } from "./compress.js";
-import { writeFile } from "./utils.js";
 import { CompressionProcessError } from "./errors.js";
 
 type Options = {
@@ -37,15 +36,8 @@ const compressQueue = (options: Options) => {
                 quality: options.quality,
                 windowSize: options.windowSize,
                 engine: options.engine,
-            }).then(({ sourceLength, compressed }) => {
-                if (options.printToStdOut) {
-                    process.stdout.write(compressed ?? "");
-                    return;
-                }
-                if (sourceLength && compressed == null) {
-                    throw new TypeError("Empty response returned from brotli");
-                }
-                return writeFile(options.br ? file + ".br" : file, compressed ?? "");
+                writeTo: options.printToStdOut ? "stdout" : "file",
+                br: options.br,
             }));
             task.promise.catch(noop);
             task.data = { file };

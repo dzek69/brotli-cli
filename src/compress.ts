@@ -2,7 +2,7 @@ import { compress as libCompress } from "brotli";
 
 import type { Mode, ModeNumeric, Quality, WindowSize } from "./types";
 
-import { readFile } from "./utils.js";
+import { readFile, writeFile } from "./utils.js";
 import { modes } from "./const.js";
 
 type Options = {
@@ -11,6 +11,8 @@ type Options = {
     quality: Quality;
     windowSize: WindowSize;
     engine: "library" | "native";
+    writeTo: "stdout" | "file";
+    br: boolean;
 };
 
 type CompressResult = {
@@ -31,7 +33,7 @@ const compress = async (options: Options): Promise<CompressResult> => {
         };
     }
 
-    return {
+    const result: CompressResult = {
         sourceLength: buffer.length,
         compressed: libCompress(buffer, {
             mode: modes.indexOf(options.mode) as ModeNumeric,
@@ -39,6 +41,19 @@ const compress = async (options: Options): Promise<CompressResult> => {
             lgwin: options.windowSize,
         }),
     };
+
+    if (result.sourceLength && result.compressed == null) {
+        throw new TypeError("Empty response returned from brotli");
+    }
+
+    if (options.writeTo === "stdout") {
+        process.stdout.write(result.compressed ?? "");
+    }
+    else {
+        await writeFile(options.filePath + ".br", result.compressed ?? "");
+    }
+
+    return result;
 };
 
 export {
