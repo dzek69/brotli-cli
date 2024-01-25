@@ -1,3 +1,5 @@
+THIS IS A DEAD BRANCH, but I'm keeping it for future reference if ever needed.
+
 # brotli-cli
 
 Brotli files compressor.
