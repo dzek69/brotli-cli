@@ -8,10 +8,40 @@ type CompressionErrorInfo = {
     error: unknown;
 };
 
+type WorkerData = {
+    filePath: string;
+    mode: Mode;
+    quality: Quality;
+    windowSize: WindowSize;
+    engine: "library" | "native";
+    writeTo: "file";
+    br: boolean;
+};
+
+type WorkerReturnMessage = {
+    status: "ok";
+} | {
+    status: "error";
+    message: string;
+};
+
+type CompressSingleFileOptions = {
+    filePath: string;
+    mode: Mode;
+    quality: Quality;
+    windowSize: WindowSize;
+    engine: "library" | "native";
+    writeTo: "stdout" | "file";
+    br: boolean;
+};
+
 export type {
     Mode,
     ModeNumeric,
     Quality,
     WindowSize,
     CompressionErrorInfo,
+    WorkerData,
+    WorkerReturnMessage,
+    CompressSingleFileOptions,
 };

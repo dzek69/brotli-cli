@@ -1,30 +1,17 @@
-import type { Mode, Quality, WindowSize } from "./types";
+import type { CompressSingleFileOptions } from "./types";
 
 import { readFile, writeFile } from "./utils.js";
 import { anyCompress } from "./anyCompress.js";
-
-type Options = {
-    filePath: string;
-    mode: Mode;
-    quality: Quality;
-    windowSize: WindowSize;
-    engine: "library" | "native";
-    writeTo: "stdout" | "file";
-    br: boolean;
-};
 
 type CompressResult = {
     sourceLength: number;
     compressed: Uint8Array | null;
 };
 
-const compress = async (options: Options): Promise<CompressResult> => {
+const compress = async (options: CompressSingleFileOptions) => {
     const buffer = await readFile(options.filePath);
     if (buffer.length === 0) {
-        return {
-            sourceLength: 0,
-            compressed: null,
-        };
+        return;
     }
 
     const result: CompressResult = {
@@ -46,8 +33,6 @@ const compress = async (options: Options): Promise<CompressResult> => {
     else {
         await writeFile(options.filePath + ".br", result.compressed ?? "");
     }
-
-    return result;
 };
 
 export {

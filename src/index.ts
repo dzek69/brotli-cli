@@ -188,6 +188,9 @@ yargs(process.argv.slice(2))
                 console.warn("");
                 console.warn(`Starting compression with ${argv.threads} threads`);
             }
+            else {
+                console.warn(`Starting compression of ${files.length} files with ${argv.threads} threads if possible`);
+            }
 
             const options: CompressQueueOptions = {
                 mode: argv.mode as Mode,

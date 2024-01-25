@@ -3,8 +3,8 @@ import { EVENTS, Queue } from "queue-system";
 import type { EventsTypes } from "queue-system/esm/const";
 import type { CompressionErrorInfo, Mode, Quality, WindowSize } from "./types";
 
-import { compress } from "./compress.js";
 import { CompressionProcessError } from "./errors.js";
+import { maybeThreadCompress } from "./maybeThreadCompress.js";
 
 type Options = {
     files: string[];
@@ -30,15 +30,21 @@ const compressQueue = (options: Options) => {
 
         const q = new Queue({ paused: true, concurrency: options.concurrency });
         options.files.forEach(file => {
-            const task = q.add(() => compress({
-                filePath: file,
-                mode: options.mode,
-                quality: options.quality,
-                windowSize: options.windowSize,
-                engine: options.engine,
-                writeTo: options.printToStdOut ? "stdout" : "file",
-                br: options.br,
-            }));
+            const task = q.add(() => {
+                const now = Date.now();
+                return maybeThreadCompress({
+                    filePath: file,
+                    mode: options.mode,
+                    quality: options.quality,
+                    windowSize: options.windowSize,
+                    engine: options.engine,
+                    writeTo: options.printToStdOut ? "stdout" : "file",
+                    br: options.br,
+                    worker: true,
+                }).then(() => {
+                    console.warn(`File ${file} compressed in ${Date.now() - now}ms`);
+                });
+            });
             task.promise.catch(noop);
             task.data = { file };
         });

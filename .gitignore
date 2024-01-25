@@ -7,3 +7,6 @@
 /*.tgz
 *.log
 *.tsbuildinfo
+
+/test/words/*
+!/test/words/generate.py
