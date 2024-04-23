@@ -20,7 +20,7 @@ type Options = {
 const noop = () => undefined;
 
 // eslint-disable-next-line max-lines-per-function
-const compressQueue = (options: Options) => {
+const compressQueue = (options: Options, verbose: boolean) => {
     // eslint-disable-next-line max-lines-per-function
     return new Promise<void>((resolve, reject) => {
         let fulfilled = false;
@@ -29,14 +29,25 @@ const compressQueue = (options: Options) => {
 
         const q = new Queue({ paused: true, concurrency: options.concurrency });
         options.files.forEach(file => {
-            const task = q.add(() => compress({
-                filePath: file,
-                mode: options.mode,
-                quality: options.quality,
-                windowSize: options.windowSize,
-                writeTo: options.printToStdOut ? "stdout" : "file",
-                br: options.br,
-            }));
+            let taskStart = 0;
+            const task = q.add(() => {
+                taskStart = Date.now();
+                if (verbose) {
+                    console.warn(`Processing file ${file}`);
+                }
+                return compress({
+                    filePath: file,
+                    mode: options.mode,
+                    quality: options.quality,
+                    windowSize: options.windowSize,
+                    writeTo: options.printToStdOut ? "stdout" : "file",
+                    br: options.br,
+                }).finally(() => {
+                    if (verbose) {
+                        console.warn(`File ${file} processed in ${Date.now() - taskStart}ms`);
+                    }
+                });
+            });
             task.promise.catch(noop);
             task.data = { file };
         });

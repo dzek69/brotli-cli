@@ -197,7 +197,7 @@ yargs(process.argv.slice(2))
                 files: files,
             };
 
-            await compressQueue(options);
+            await compressQueue(options, Boolean(argv.v));
             console.warn("OK");
         }
         catch (error: unknown) {
