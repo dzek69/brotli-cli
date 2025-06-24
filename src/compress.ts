@@ -31,7 +31,8 @@ const compress = async (options: CompressSingleFileOptions) => {
         process.stdout.write(result.compressed ?? "");
     }
     else {
-        await writeFile(options.filePath + ".br", result.compressed ?? "");
+        const extraExt = options.br ? ".br" : "";
+        await writeFile(options.filePath + extraExt, result.compressed ?? "");
     }
 };
 
